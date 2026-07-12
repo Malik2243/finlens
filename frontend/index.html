@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinLens — Competitor Margin Intelligence</title>
+  <meta name="description" content="Real-time competitor pricing vs your own margin data — the join that no BI tool can do." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="8" fill="url(#brandGrad)"/>
+            <path d="M8 22 L14 14 L18 18 L22 10 L26 14" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="26" cy="14" r="2" fill="#00f5c4"/>
+            <defs>
+              <linearGradient id="brandGrad" x1="0" y1="0" x2="32" y2="32">
+                <stop offset="0%" stop-color="#7c3aed"/>
+                <stop offset="100%" stop-color="#4f46e5"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">FinLens</span>
+          <span class="brand-tagline">Competitor Margin Intelligence</span>
+        </div>
+      </div>
+      <div class="header-meta">
+        <span class="data-badge" id="data-as-of">
+          <span class="dot pulse"></span>
+          Loading…
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main-content">
+
+    <!-- LOADING STATE -->
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="spinner"></div>
+      <p>Loading intelligence data…</p>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div class="error-banner" id="error-banner" style="display:none">
+      <span>⚠️ Could not reach the backend. Is the API running?</span>
+    </div>
+
+    <!-- ===== SUMMARY CARDS ===== -->
+    <section class="cards-section" id="cards-section" style="display:none">
+      <div class="cards-grid">
+        <div class="stat-card" id="card-total">
+          <div class="card-label">SKUs Tracked</div>
+          <div class="card-value" id="val-total">—</div>
+          <div class="card-sub" id="sub-total">—</div>
+        </div>
+        <div class="stat-card warning" id="card-declining">
+          <div class="card-label">Declining Margin</div>
+          <div class="card-value" id="val-declining">—</div>
+          <div class="card-sub">slope &lt; −1 pt/mo &amp; monotonic</div>
+        </div>
+        <div class="stat-card accent" id="card-above">
+          <div class="card-label">Priced &gt;10% Above Market</div>
+          <div class="card-value" id="val-above">—</div>
+          <div class="card-sub">vs scraped competitor price</div>
+        </div>
+        <div class="stat-card danger" id="card-risk">
+          <div class="card-label">Total Revenue at Risk</div>
+          <div class="card-value" id="val-risk">—</div>
+          <div class="card-sub">if prices matched to market</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== THE JOIN SECTION ===== -->
+    <section class="join-section" id="join-section" style="display:none">
+      <div class="join-header">
+        <span class="fire">🔥</span>
+        <div>
+          <h2>SKUs Where Competitor Pricing Likely Explains Margin Decline</h2>
+          <p class="join-sub">Cross-reference: declining margin <em>AND</em> priced &gt;10% above market. These are the ones bleeding.</p>
+        </div>
+      </div>
+      <div class="join-chips" id="join-chips"></div>
+    </section>
+
+    <!-- ===== TABS ===== -->
+    <section class="tabs-section" id="tabs-section" style="display:none">
+      <div class="tab-bar" role="tablist">
+        <button class="tab-btn active" id="tab-price" role="tab" aria-selected="true" onclick="switchTab('price')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Price Delta
+        </button>
+        <button class="tab-btn" id="tab-margin" role="tab" aria-selected="false" onclick="switchTab('margin')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12 L5 7 L8 9 L11 4 L14 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Margin Trend
+        </button>
+        <button class="tab-btn" id="tab-risk" role="tab" aria-selected="false" onclick="switchTab('risk')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2 L8 9M5 6 L8 2 L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12 h10 a1 1 0 0 1 0 2H3 a1 1 0 0 1 0-2z" fill="currentColor" opacity="0.4"/></svg>
+          Revenue at Risk
+        </button>
+        <button class="tab-btn" id="tab-notes" role="tab" aria-selected="false" onclick="switchTab('notes')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 6h6M5 9h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Assumptions
+        </button>
+      </div>
+
+      <!-- PRICE DELTA TABLE -->
+      <div class="tab-panel active" id="panel-price">
+        <div class="table-meta" id="meta-price"></div>
+        <div class="table-scroll">
+          <table class="data-table" id="table-price">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Our Price</th>
+                <th>Competitor</th>
+                <th>Delta %</th>
+                <th>Flag</th>
+                <th>Source</th>
+                <th>Scraped At</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-price"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MARGIN TREND TABLE -->
+      <div class="tab-panel" id="panel-margin">
+        <div class="table-meta" id="meta-margin"></div>
+        <div class="table-scroll">
+          <table class="data-table" id="table-margin">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Apr 2026</th>
+                <th>May 2026</th>
+                <th>Jun 2026</th>
+                <th>Slope (pts/mo)</th>
+                <th>Monotonic?</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-margin"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- REVENUE AT RISK TABLE -->
+      <div class="tab-panel" id="panel-risk">
+        <div class="table-meta" id="meta-risk"></div>
+        <div class="table-scroll">
+          <table class="data-table" id="table-risk">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>June Units</th>
+                <th>June Revenue</th>
+                <th>Margin %</th>
+                <th>Current GP</th>
+                <th>Comp Price</th>
+                <th>New Revenue</th>
+                <th>New GP</th>
+                <th>New Margin %</th>
+                <th>Profit Swing</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-risk"></tbody>
+          </table>
+        </div>
+        <div class="risk-note" id="risk-note"></div>
+      </div>
+
+      <!-- ASSUMPTIONS -->
+      <div class="tab-panel" id="panel-notes">
+        <ul class="assumptions-list" id="assumptions-list"></ul>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>FinLens · Data as of <span id="footer-date">—</span> · All prices source-linked · No pricing advice implied</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
