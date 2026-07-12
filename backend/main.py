@@ -33,11 +33,14 @@ _summary: dict = {}
 @app.on_event("startup")
 def load_data():
     global _price_delta, _margin_trend, _revenue_at_risk, _assumptions, _summary
-    _price_delta = get_price_delta()
-    _margin_trend = get_margin_trend()
-    _revenue_at_risk = get_revenue_at_risk()
-    _assumptions = get_assumptions()
-    _summary = get_summary(_price_delta, _margin_trend, _revenue_at_risk)
+    try:
+        _price_delta = get_price_delta()
+        _margin_trend = get_margin_trend()
+        _revenue_at_risk = get_revenue_at_risk()
+        _assumptions = get_assumptions()
+        _summary = get_summary(_price_delta, _margin_trend, _revenue_at_risk)
+    except Exception as e:
+        print("Failed to load data:", e)
 
 
 @app.get("/api/health")
@@ -68,3 +71,8 @@ def revenue_at_risk():
 @app.get("/api/assumptions")
 def assumptions():
     return {"notes": _assumptions}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
