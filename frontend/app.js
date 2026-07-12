@@ -9,7 +9,7 @@
 // For local dev: http://localhost:8000
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:8000'
-  : window.__API_URL__ || 'https://finlens-api.onrender.com'; // replaced at deploy time
+  : window.__API_URL__ || 'https://finlens-backend-9usy.onrender.com';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 const fmt = {
